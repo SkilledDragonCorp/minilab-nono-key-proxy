@@ -1,0 +1,190 @@
+# Verbatim upstream jobs from nolabs-ai/nono @ 8bb041356d48f771a221e58c98d9b1ff442e76fe
+# Jobs: test, integration, fmt, clippy, audit
+# Allowed deviations only (A1–A3) — see README / scripts/check-upstream-parity
+name: Upstream CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -Dwarnings
+  RUST_BACKTRACE: "1"
+
+jobs:
+  pin:
+    name: Verify upstream pin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Assert upstream HEAD pin
+        run: |
+          set -euo pipefail
+          got="$(git -C upstream rev-parse HEAD)"
+          want="8bb041356d48f771a221e58c98d9b1ff442e76fe"
+          echo "upstream HEAD=$got"
+          test "$got" = "$want"
+
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@631a55b12751854ce901bb631d5902ceb48146f7 # stable
+        with:
+          toolchain: stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            upstream/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('upstream/**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build
+        working-directory: upstream
+        run: cargo build --workspace --verbose
+
+      - name: Verify nono does not link libdbus (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        working-directory: upstream
+        run: |
+          set -euo pipefail
+          bin="target/debug/nono"
+          needed="$(objdump -p "$bin" | awk '/NEEDED/ {print $2}')"
+          echo "NEEDED libraries:"
+          echo "$needed"
+          if echo "$needed" | grep -qi '^libdbus'; then
+            echo "::error::$bin links libdbus — the Linux keyring backend regressed off the pure-Rust zbus path"
+            exit 1
+          fi
+          echo "OK: no libdbus dependency"
+
+      - name: Run tests
+        working-directory: upstream
+        run: cargo test --workspace --verbose --no-fail-fast
+
+      - name: Run doc tests
+        working-directory: upstream
+        run: cargo test --doc --workspace --verbose --no-fail-fast
+
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@631a55b12751854ce901bb631d5902ceb48146f7 # stable
+        with:
+          toolchain: stable
+          components: rustfmt
+
+      - name: Check formatting
+        working-directory: upstream
+        run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@631a55b12751854ce901bb631d5902ceb48146f7 # stable
+        with:
+          toolchain: stable
+          components: clippy
+
+      - name: Run Clippy
+        working-directory: upstream
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings -D clippy::unwrap_used
+
+  integration:
+    name: Integration (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@631a55b12751854ce901bb631d5902ceb48146f7 # stable
+        with:
+          toolchain: stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            upstream/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('upstream/**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Run integration tests
+        working-directory: upstream
+        run: ./scripts/run_all_tests.sh
+
+  audit:
+    name: Cargo Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@631a55b12751854ce901bb631d5902ceb48146f7 # stable
+        with:
+          toolchain: stable
+
+      - name: Install cargo-audit
+        working-directory: upstream
+        run: cargo install cargo-audit
+
+      - name: Run cargo audit
+        working-directory: upstream
+        run: cargo audit

@@ -1,0 +1,8 @@
+minilab-nono-key-proxy
+Copyright 2026 SkilledDragon LLC
+
+This product includes software developed at SkilledDragon LLC (https://skilleddragon.com/).
+
+This repository vendors [nolabs-ai/nono](https://github.com/nolabs-ai/nono) as a git submodule
+at pin 8bb041356d48f771a221e58c98d9b1ff442e76fe (tag v0.80.0), licensed under Apache-2.0.
+See upstream/LICENSE for upstream terms.

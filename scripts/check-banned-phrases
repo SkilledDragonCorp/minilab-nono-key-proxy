@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Fail if banned soft/ambiguous phrases appear in README, scripts, or CI.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+# Built in parts so this script does not trip its own scanner.
+PATTERN=$(printf '%s|%s|%s|%s|%s' 'e\.g\.' 'if present' 'or npm install' 'or similar' 'something like')
+fail=0
+
+TARGETS=()
+[[ -f "$ROOT/README.md" ]] && TARGETS+=("$ROOT/README.md")
+[[ -d "$ROOT/scripts" ]] && while IFS= read -r -d '' f; do
+  [[ "$f" == "$SELF" ]] && continue
+  [[ "$f" == *"/target/"* ]] && continue
+  TARGETS+=("$f")
+done < <(find "$ROOT/scripts" -type f ! -path '*/target/*' -print0)
+[[ -d "$ROOT/.github/workflows" ]] && while IFS= read -r -d '' f; do TARGETS+=("$f"); done < <(find "$ROOT/.github/workflows" -type f -print0)
+
+if ((${#TARGETS[@]} == 0)); then
+  echo "ERROR: no files to scan"
+  exit 1
+fi
+
+for f in "${TARGETS[@]}"; do
+  if grep -nIE -i "$PATTERN" "$f"; then
+    echo "ERROR: banned phrase in $f"
+    fail=1
+  fi
+done
+
+exit "$fail"

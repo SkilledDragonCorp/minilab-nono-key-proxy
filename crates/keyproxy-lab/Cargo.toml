@@ -1,0 +1,25 @@
+[package]
+name = "keyproxy-lab"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "SkilledDragon minilab: prove nono credential proxy never leaks the real token into the sandbox"
+publish = false
+
+[[bin]]
+name = "keyproxy-lab"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tiny_http.workspace = true
+
+[dev-dependencies]
+rand.workspace = true
+tempfile.workspace = true
+which.workspace = true
+serde_json.workspace = true

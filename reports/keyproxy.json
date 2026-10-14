@@ -1,0 +1,54 @@
+{
+  "lab": "minilab-nono-key-proxy",
+  "generated_at": "2026-10-14T02:56:58Z",
+  "keyless": true,
+  "upstream_pin": "8bb041356d48f771a221e58c98d9b1ff442e76fe",
+  "upstream_tag": "v0.80.0",
+  "nono_version": "nono 0.80.0",
+  "uname": {
+    "sysname": "Darwin",
+    "release": "25.6.0"
+  },
+  "summary": {
+    "pass": 7,
+    "fail": 0,
+    "duration_ms": 21606
+  },
+  "steps": [
+    {
+      "name": "unit_lib",
+      "status": "pass",
+      "duration_ms": 616
+    },
+    {
+      "name": "e2e",
+      "status": "pass",
+      "duration_ms": 17894
+    },
+    {
+      "name": "fmt",
+      "status": "pass",
+      "duration_ms": 529
+    },
+    {
+      "name": "clippy",
+      "status": "pass",
+      "duration_ms": 459
+    },
+    {
+      "name": "skills",
+      "status": "pass",
+      "duration_ms": 220
+    },
+    {
+      "name": "banned",
+      "status": "pass",
+      "duration_ms": 185
+    },
+    {
+      "name": "upstream_parity",
+      "status": "pass",
+      "duration_ms": 925
+    }
+  ]
+}
