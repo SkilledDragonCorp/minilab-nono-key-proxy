@@ -8,7 +8,8 @@ Local green run (2026-10-14T02:56:58Z) before push.
 | `uname -r` | `25.6.0` (Darwin) |
 | Upstream pin | `8bb041356d48f771a221e58c98d9b1ff442e76fe` (`v0.80.0`) |
 | Lab report | `reports/keyproxy.json` |
-| CI run URL | _(filled after first green Actions run on `main`)_ |
+| CI run URL | https://github.com/SkilledDragonCorp/minilab-nono-key-proxy/actions/runs/38503804585 |
+| Upstream CI | https://github.com/SkilledDragonCorp/minilab-nono-key-proxy/actions/runs/38503804584 |
 
 ## Exact e2e command lines
 
